@@ -60,4 +60,4 @@ run_dashboard()
 
 ## License
 
-MIT License
+GNU General Public License v3 (GPLv3)
