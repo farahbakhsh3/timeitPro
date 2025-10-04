@@ -35,7 +35,7 @@ from timeitPro import timeit, run_dashboard
 # Profile a function with 3 runs and console output
 @timeit(runs=3, show_console=True)
 def my_func():
-    total = sum(range(1000000))
+    total = sum(range(100_000))
     return total
 
 my_func()
@@ -57,6 +57,12 @@ run_dashboard()
   - Dropdown to select log file
   - Separate line charts for execution time, CPU, memory, peak memory
   - Table of detailed runs
+
+## Dashboard Preview
+
+Here is an example of the timeitPro dashboard report:
+
+![Dashboard Report](Images/Report.png)
 
 ## License
 

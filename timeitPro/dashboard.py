@@ -14,9 +14,7 @@ Features:
 """
 
 from flask import Flask, render_template_string, request
-from .utils import load_json_report, latest_log_file
-from glob import glob
-import os
+from .utils import load_json_report, get_all_log_files
 
 app = Flask(__name__)
 
@@ -85,13 +83,12 @@ TEMPLATE = """
 </html>
 """
 
-def get_all_log_files():
-    """Return a sorted list of all log files in the current directory."""
-    return sorted([os.path.basename(f) for f in glob("timeitPro_log_*.json")])
 
 @app.route("/", methods=["GET"])
 def index():
-    """Render dashboard with selected JSON log."""
+    """
+    Render dashboard with selected JSON log.
+    """
     logfiles = get_all_log_files()
     if not logfiles:
         return "<h1>No log files found. Run some functions first.</h1>"
@@ -118,6 +115,7 @@ def index():
         data=data
     )
 
+
 def run_dashboard():
     """
     Run the Flask dashboard server.
@@ -125,6 +123,7 @@ def run_dashboard():
     Opens a web server on localhost:5000 to display profiling results.
     """
     app.run(debug=False, port=5000)
+
 
 if __name__ == "__main__":
     run_dashboard()

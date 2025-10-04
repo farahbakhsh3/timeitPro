@@ -12,7 +12,8 @@ LOG_DIR = "."
 LOG_PREFIX = "timeitPro_log_"
 LOG_EXT = ".json"
 
-def _next_log_filename():
+
+def _next_log_filename() -> str:
     """
     Generate the next available log filename with zero-padded counter.
 
@@ -31,6 +32,7 @@ def _next_log_filename():
             counter = len(existing) + 1
     return os.path.join(LOG_DIR, f"{LOG_PREFIX}{counter:06d}{LOG_EXT}")
 
+
 def save_json_report(data: dict) -> str:
     """
     Save profiling data to a new JSON file with incremental counter.
@@ -45,6 +47,7 @@ def save_json_report(data: dict) -> str:
     with open(filename, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=4)
     return filename
+
 
 def load_json_report(filename: str) -> dict:
     """
@@ -61,7 +64,8 @@ def load_json_report(filename: str) -> dict:
     with open(filename, "r", encoding="utf-8") as f:
         return json.load(f)
 
-def latest_log_file() -> str:
+
+def latest_log_file() -> str | None:
     """
     Get the most recent log file.
 
@@ -72,3 +76,10 @@ def latest_log_file() -> str:
     if not existing:
         return None
     return existing[-1]
+
+
+def get_all_log_files() -> list[str]:
+    """
+    Return a sorted list of all log files in the current directory.
+    """
+    return sorted([os.path.basename(f) for f in glob("timeitPro_log_*.json")])

@@ -16,6 +16,7 @@ import tracemalloc
 from functools import wraps
 from .utils import save_json_report
 
+
 def timeit(runs: int = 1, show_console: bool = True):
     """
     Profile a function over multiple runs and save results to JSON logs.
@@ -31,10 +32,12 @@ def timeit(runs: int = 1, show_console: bool = True):
         - Creates a new JSON log file for the runs (incremental filename)
         - Optionally prints each run's statistics to console
     """
+
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
             logs = []
+            result = None
 
             for run_idx in range(1, runs + 1):
                 process = psutil.Process()
@@ -74,5 +77,7 @@ def timeit(runs: int = 1, show_console: bool = True):
                 print(f"Saved log to: {filename}")
 
             return result
+
         return wrapper
+
     return decorator

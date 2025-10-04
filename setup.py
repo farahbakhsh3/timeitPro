@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as f:
 
 setup(
     name="timeitPro",
-    version="0.1.0",
+    version="0.1.1",
     author="ّFarahbakhsh3",
     author_email="farahbakhsh3@gmail.com",
     description="Advanced Python function profiler with JSON logging and Flask dashboard",

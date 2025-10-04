@@ -14,4 +14,4 @@ Modules:
 
 from .core import timeit
 from .dashboard import run_dashboard
-from .utils import latest_log_file, load_json_report, save_json_report
+from .utils import latest_log_file, load_json_report, save_json_report, get_all_log_files
