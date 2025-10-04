@@ -62,7 +62,7 @@ run_dashboard()
 
 Here is an example of the timeitPro dashboard report:
 
-![Dashboard Report](Images/Report.png)
+![Dashboard Report](https://github.com/farahbakhsh3/timeitPro/blob/main/Images/Report.png)
 
 ## License
 
