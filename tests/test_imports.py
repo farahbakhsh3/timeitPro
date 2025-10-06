@@ -15,6 +15,10 @@ def test_import_dashboard() -> None:
     """Test that the dashboard module imports without errors."""
     import timeitPro.dashboard  # noqa: F401
 
+def test_import_utils() -> None:
+    """Test that the utils module imports without errors."""
+    import timeitPro.utils  # noqa: F401
+
 
 def test_package_has_version() -> None:
     """Ensure that __version__ attribute exists."""

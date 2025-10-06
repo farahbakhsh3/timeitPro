@@ -204,5 +204,10 @@ def run_dashboard() -> None:
     app.run(debug=False, port=5000)
 
 
-if __name__ == "__main__":
+def main() -> None:
+    """Run the dashboard if executed as main script."""
     run_dashboard()
+
+
+if __name__ == "__main__":
+    main()
