@@ -1,3 +1,9 @@
 /dist/
 /timeitPro.egg-info/
 /*.json
+/__pycache__/
+/.idea/
+/.pytest_cache/
+/tests/__pycache__/
+/timeitPro/__pycache__/
+/.coverage

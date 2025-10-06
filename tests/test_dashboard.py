@@ -8,7 +8,10 @@ from __future__ import annotations
 import json
 from pathlib import Path
 import pytest
+from unittest.mock import patch
 from timeitPro.dashboard import app as flask_app  # existing app instance
+from timeitPro.dashboard import run_dashboard
+import timeitPro.dashboard as dashboard
 
 
 @pytest.fixture
@@ -97,3 +100,18 @@ def test_index_with_logs_average_view(client):
     assert "Average CPU Usage" in html
     assert "Average Memory Usage" in html
     assert "Average Peak Memory" in html
+
+
+def test_run_dashboard_calls_app_run():
+    """Ensure run_dashboard calls Flask app.run with correct arguments."""
+    with patch("timeitPro.dashboard.app.run") as mock_run:
+        run_dashboard()
+        mock_run.assert_called_once_with(debug=False, port=5000)
+
+
+def test_main_calls_run_dashboard():
+    """Ensure that main is called when __name__ == '__main__'."""
+    with patch("timeitPro.dashboard.run_dashboard") as mock_run:
+        dashboard.main()
+        mock_run.assert_called_once()
+

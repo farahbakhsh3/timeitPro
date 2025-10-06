@@ -86,3 +86,20 @@ def test_get_all_log_files(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> N
 
     all_files = utils.get_all_log_files()
     assert all_files == ["timeitPro_log_000001.json", "timeitPro_log_000003.json", "timeitPro_log_000005.json"]
+
+def test_latest_log_file_none(tmp_path: Path, monkeypatch: "MonkeyPatch") -> None:
+    """
+    Test `latest_log_file` returns None when no valid log files exist.
+
+    Scenarios covered:
+    1. The log directory is empty.
+    2. The directory contains only invalid files.
+    """
+    # Empty log directory
+    monkeypatch.setattr("timeitPro.utils.LOG_DIR", tmp_path)
+    assert utils.latest_log_file() is None
+
+    # Directory contains an invalid file
+    invalid_file = tmp_path / "timeitPro_log_a.json"
+    invalid_file.write_text("dummy content")
+    assert utils.latest_log_file() is None
