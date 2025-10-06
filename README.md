@@ -14,6 +14,7 @@
 - Flask dashboard:
   - Displays results as **separate line charts** for each metric.
   - Dropdown to select which log file to display.
+  - Dropdown to select all run details or only average result.
   - Table with detailed run information.
 - Console output optional (`show_console=True/False`).
 
