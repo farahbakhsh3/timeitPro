@@ -56,6 +56,7 @@ run_dashboard()
 - Access via: `http://localhost:5000/`
 - Features:
   - Dropdown to select log file
+  - Dropdown to select all run details or only average result.
   - Separate line charts for execution time, CPU, memory, peak memory
   - Table of detailed runs
 
