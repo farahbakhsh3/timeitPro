@@ -12,14 +12,18 @@ Features:
 - Toggle to display "All runs" or "Averages only"
 - Separate charts for per-run and average metrics
 - Automatically updates charts and table based on selection
+- Averages charts are small and displayed side by side
 """
 
-from flask import Flask, render_template_string, request
 from typing import List, Dict, Any, Tuple
+from flask import Flask, render_template_string, request
 from .utils import load_json_report, get_all_log_files
 
 app = Flask(__name__)
 
+# -----------------------------
+# HTML template
+# -----------------------------
 TEMPLATE = """
 <!DOCTYPE html>
 <html>
@@ -30,7 +34,7 @@ TEMPLATE = """
 <body style="font-family: Arial, sans-serif; margin: 40px;">
     <h1>timeitPro Report</h1>
 
-    <!-- Form to select log file and view type -->
+    <!-- Log file selection and view toggle -->
     <form method="get">
         <label for="logfile">Select log file:</label>
         <select name="logfile" id="logfile" onchange="this.form.submit()">
@@ -49,7 +53,7 @@ TEMPLATE = """
     <p>Showing log file: <b>{{ selected_file }}</b></p>
 
     {% if view == 'average' and averages %}
-        <!-- Averages section -->
+        <!-- Average Metrics Display -->
         <h2>Average Metrics</h2>
         <ul>
             <li>Average Execution Time: {{ averages.average_execution_time_sec }} s</li>
@@ -58,30 +62,39 @@ TEMPLATE = """
             <li>Average Peak Memory: {{ averages.average_peak_memory_bytes }} bytes</li>
         </ul>
 
-        {% for metric, color in metrics %}
-            <div style="margin-bottom: 30px;">
-                <h3>{{ metric.replace('_',' ').title() }} (Average)</h3>
-                <canvas id="{{ metric }}_avg" width="800" height="400"></canvas>
-                <script>
-                    const ctx_{{ metric }}_avg = document.getElementById('{{ metric }}_avg').getContext('2d');
-                    new Chart(ctx_{{ metric }}_avg, {
-                        type: 'bar',
-                        data: {
-                            labels: ['Average'],
-                            datasets: [{
-                                label: '{{ metric.replace("_"," ").title() }}',
-                                data: [{{ averages[metric] }}],
-                                backgroundColor: '{{ color }}'
-                            }]
-                        },
-                        options: { responsive: false, scales: { y: { beginAtZero: true } } }
-                    });
-                </script>
-            </div>
-        {% endfor %}
+        <!-- Small charts for averages in a single row -->
+        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+            {% for metric, color in metrics %}
+                <div style="flex: 1; min-width: 200px;">
+                    <h4 style="text-align:center;">{{ metric.replace('_',' ').title() }}</h4>
+                    <canvas id="{{ metric }}_avg" width="200" height="200"></canvas>
+                    <script>
+                        const ctx_{{ metric }}_avg = document.getElementById('{{ metric }}_avg').getContext('2d');
+                        new Chart(ctx_{{ metric }}_avg, {
+                            type: 'bar',  // average shown as bar chart
+                            data: {
+                                labels: ['Average'],
+                                datasets: [{
+                                    label: '{{ metric.replace("_"," ").title() }}',
+                                    data: [{{ averages['average_' + metric] }}],
+                                    backgroundColor: '{{ color }}'
+                                }]
+                            },
+                            options: {
+                                responsive: false,
+                                plugins: {
+                                    legend: { display: false }
+                                },
+                                scales: { y: { beginAtZero: true } }
+                            }
+                        });
+                    </script>
+                </div>
+            {% endfor %}
+        </div>
 
     {% else %}
-        <!-- All runs section -->
+        <!-- All runs displayed as line charts -->
         {% for metric, color in metrics %}
             <div style="margin-bottom: 30px;">
                 <h3>{{ metric.replace('_',' ').title() }} (All Runs)</h3>
@@ -100,7 +113,10 @@ TEMPLATE = """
                                 tension: 0.1
                             }]
                         },
-                        options: { responsive: false, scales: { y: { beginAtZero: true } } }
+                        options: {
+                            responsive: false,
+                            scales: { y: { beginAtZero: true } }
+                        }
                     });
                 </script>
             </div>
@@ -125,13 +141,16 @@ TEMPLATE = """
 </html>
 """
 
-
+# -----------------------------
+# Flask route
+# -----------------------------
 @app.route("/", methods=["GET"])
 def index() -> str:
     """
     Render the dashboard page.
 
-    Retrieves the selected log file and displays either all runs or averages only.
+    Retrieves the selected log file and displays either all runs
+    or averages-only charts depending on user selection.
     """
     logfiles: List[str] = get_all_log_files()
     if not logfiles:
@@ -146,6 +165,7 @@ def index() -> str:
 
     labels: List[str] = [f"{r['function']} (Run {r['run']})" for r in reports]
 
+    # Define metrics and chart colors
     metrics: List[Tuple[str, str]] = [
         ("execution_time_sec", "#3498db"),
         ("cpu_usage_percent", "#2ecc71"),
@@ -153,6 +173,7 @@ def index() -> str:
         ("peak_memory_bytes", "#9b59b6")
     ]
 
+    # Prepare data for all-runs charts
     data: Dict[str, List[Any]] = {
         metric: [r[metric] for r in reports] for metric, _ in metrics
     }
@@ -170,11 +191,12 @@ def index() -> str:
     )
 
 
+# -----------------------------
+# Run dashboard server
+# -----------------------------
 def run_dashboard() -> None:
     """
-    Run the Flask dashboard server.
-
-    Opens a web server on localhost:5000 to display profiling results.
+    Run the Flask dashboard server on localhost:5000.
     """
     app.run(debug=False, port=5000)
 

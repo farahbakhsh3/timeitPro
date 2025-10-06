@@ -12,10 +12,10 @@ Decorator Arguments:
 """
 
 import time
-import psutil
 import tracemalloc
 from functools import wraps
 from typing import Any, Callable, Dict, List
+import psutil
 from .utils import save_json_report
 
 
@@ -63,7 +63,8 @@ def timeit(
                 end_time: float = time.perf_counter()
                 end_mem: int = process.memory_info().rss
                 end_cpu: float = process.cpu_percent(interval=None)
-                _, peak_mem: int = tracemalloc.get_traced_memory()
+                tracemem: tuple[int, int] = tracemalloc.get_traced_memory()
+                peak_mem: int = tracemem[1]
                 tracemalloc.stop()
 
                 # Per-run report
