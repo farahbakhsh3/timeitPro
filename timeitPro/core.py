@@ -15,14 +15,16 @@ import time
 import tracemalloc
 from functools import wraps
 from typing import Any, Callable, Dict, List
+
 import psutil
+
 from .utils import save_json_report
 
 
 def timeit(
-    runs: int = 1,
-    show_console: bool = True,
-    show_average: bool = True
+        runs: int = 1,
+        show_console: bool = True,
+        show_average: bool = True
 ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     """
     Decorator to profile a function over multiple executions.

@@ -16,7 +16,9 @@ Features:
 """
 
 from typing import List, Dict, Any, Tuple
+
 from flask import Flask, render_template_string, request
+
 from .utils import load_json_report, get_all_log_files
 
 app = Flask(__name__)
@@ -140,6 +142,7 @@ TEMPLATE = """
 </body>
 </html>
 """
+
 
 # -----------------------------
 # Flask route

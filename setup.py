@@ -50,8 +50,8 @@ setup(
 
     # Dependencies required for this package
     install_requires=[
-        "Flask>=2.0.0",    # Flask framework for the dashboard
-        "psutil>=5.9.0"    # psutil for CPU and memory profiling
+        "Flask>=2.0.0",  # Flask framework for the dashboard
+        "psutil>=5.9.0"  # psutil for CPU and memory profiling
     ],
 
     # Classifiers help PyPI categorize the package
