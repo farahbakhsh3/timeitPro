@@ -26,7 +26,7 @@ setup(
     name="timeitPro",
 
     # Package version
-    version="0.2.1",
+    version="0.2.2",
 
     # Author details
     author="Farahbakhsh3",
