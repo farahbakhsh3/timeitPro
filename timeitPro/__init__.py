@@ -11,7 +11,7 @@ Modules:
 - utils.py: JSON log management utilities
 - dashboard.py: Flask dashboard for visualizing function profiling results
 """
-__version__ = "0.2.1"
+__version__ = "0.2.2"
 
 from .core import timeit
 from .dashboard import run_dashboard
