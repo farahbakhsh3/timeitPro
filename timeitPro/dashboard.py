@@ -15,11 +15,12 @@ Features:
 - Averages charts are small and displayed side by side
 """
 
+import os
 from typing import List, Dict, Any, Tuple
 
 from flask import Flask, render_template_string, request
 
-from .utils import load_json_report, get_all_log_files
+from . import utils
 
 app = Flask(__name__)
 
@@ -31,7 +32,84 @@ TEMPLATE = """
 <html>
 <head>
     <title>timeitPro Report</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        function drawLineChart(canvasId, labels, data, color) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width;
+            const h = canvas.height;
+            const padding = 40;
+
+            ctx.clearRect(0, 0, w, h);
+            ctx.strokeStyle = '#444';
+            ctx.lineWidth = 1;
+
+            // Axes
+            ctx.beginPath();
+            ctx.moveTo(padding, padding);
+            ctx.lineTo(padding, h - padding);
+            ctx.lineTo(w - padding, h - padding);
+            ctx.stroke();
+
+            if (!data || data.length === 0) return;
+
+            const maxVal = Math.max(...data, 0);
+            const minVal = Math.min(...data, 0);
+            const range = (maxVal - minVal) || 1;
+            const stepX = (w - 2 * padding) / Math.max(data.length - 1, 1);
+
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            data.forEach((val, i) => {
+                const x = padding + i * stepX;
+                const y = h - padding - ((val - minVal) / range) * (h - 2 * padding);
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.stroke();
+
+            // Labels (sparse)
+            ctx.fillStyle = '#222';
+            ctx.font = '12px Arial';
+            const labelStep = Math.ceil(labels.length / 5);
+            labels.forEach((label, i) => {
+                if (i % labelStep !== 0) return;
+                const x = padding + i * stepX;
+                ctx.fillText(label, Math.max(0, x - 10), h - padding + 14);
+            });
+        }
+
+        function drawBarChart(canvasId, value, color) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width;
+            const h = canvas.height;
+            const padding = 30;
+
+            ctx.clearRect(0, 0, w, h);
+            ctx.strokeStyle = '#444';
+            ctx.lineWidth = 1;
+
+            // Axes
+            ctx.beginPath();
+            ctx.moveTo(padding, padding);
+            ctx.lineTo(padding, h - padding);
+            ctx.lineTo(w - padding, h - padding);
+            ctx.stroke();
+
+            const maxVal = Math.max(value, 1);
+            const barHeight = ((value / maxVal) * (h - 2 * padding));
+            const barWidth = (w - 2 * padding) * 0.6;
+            const x = padding + (w - 2 * padding - barWidth) / 2;
+            const y = h - padding - barHeight;
+
+            ctx.fillStyle = color;
+            ctx.fillRect(x, y, barWidth, barHeight);
+        }
+    </script>
 </head>
 <body style="font-family: Arial, sans-serif; margin: 40px;">
     <h1>timeitPro Report</h1>
@@ -71,25 +149,7 @@ TEMPLATE = """
                     <h4 style="text-align:center;">{{ metric.replace('_',' ').title() }}</h4>
                     <canvas id="{{ metric }}_avg" width="200" height="200"></canvas>
                     <script>
-                        const ctx_{{ metric }}_avg = document.getElementById('{{ metric }}_avg').getContext('2d');
-                        new Chart(ctx_{{ metric }}_avg, {
-                            type: 'bar',  // average shown as bar chart
-                            data: {
-                                labels: ['Average'],
-                                datasets: [{
-                                    label: '{{ metric.replace("_"," ").title() }}',
-                                    data: [{{ averages['average_' + metric] }}],
-                                    backgroundColor: '{{ color }}'
-                                }]
-                            },
-                            options: {
-                                responsive: false,
-                                plugins: {
-                                    legend: { display: false }
-                                },
-                                scales: { y: { beginAtZero: true } }
-                            }
-                        });
+                        drawBarChart('{{ metric }}_avg', {{ averages['average_' + metric] }}, '{{ color }}');
                     </script>
                 </div>
             {% endfor %}
@@ -102,24 +162,12 @@ TEMPLATE = """
                 <h3>{{ metric.replace('_',' ').title() }} (All Runs)</h3>
                 <canvas id="{{ metric }}" width="800" height="400"></canvas>
                 <script>
-                    const ctx_{{ metric }} = document.getElementById('{{ metric }}').getContext('2d');
-                    new Chart(ctx_{{ metric }}, {
-                        type: 'line',
-                        data: {
-                            labels: {{ labels|tojson }},
-                            datasets: [{
-                                label: '{{ metric.replace("_"," ").title() }}',
-                                data: {{ data[metric]|tojson }},
-                                borderColor: '{{ color }}',
-                                fill: false,
-                                tension: 0.1
-                            }]
-                        },
-                        options: {
-                            responsive: false,
-                            scales: { y: { beginAtZero: true } }
-                        }
-                    });
+                    drawLineChart(
+                        '{{ metric }}',
+                        {{ labels|tojson }},
+                        {{ data[metric]|tojson }},
+                        '{{ color }}'
+                    );
                 </script>
             </div>
         {% endfor %}
@@ -155,14 +203,18 @@ def index() -> str:
     Retrieves the selected log file and displays either all runs
     or averages-only charts depending on user selection.
     """
-    logfiles: List[str] = get_all_log_files()
+    logfiles: List[str] = utils.get_all_log_files()
     if not logfiles:
         return "<h1>No log files found. Run some functions first.</h1>"
 
     selected_file: str = request.args.get("logfile") or logfiles[-1]
     view: str = request.args.get("view", "all")  # 'all' or 'average'
 
-    report_data: Dict[str, Any] = load_json_report(selected_file)
+    selected_path = selected_file
+    if selected_file in logfiles and not os.path.isabs(selected_file) and os.path.dirname(selected_file) == "":
+        selected_path = os.path.join(utils.LOG_DIR, selected_file)
+
+    report_data: Dict[str, Any] = utils.load_json_report(selected_path)
     reports: List[Dict[str, Any]] = report_data.get("runs", [])
     averages: Dict[str, Any] = report_data.get("averages", {})
 

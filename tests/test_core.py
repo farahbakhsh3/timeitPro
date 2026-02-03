@@ -84,3 +84,9 @@ def test_timeit_with_show_average(tmp_path: Path, monkeypatch: pytest.MonkeyPatc
     assert "Average Results" in captured.out
     assert "dummy_func" in captured.out
     assert "Saved log to:" in captured.out
+
+
+def test_timeit_runs_must_be_positive() -> None:
+    """Test that runs must be >= 1."""
+    with pytest.raises(ValueError):
+        core.timeit(runs=0)

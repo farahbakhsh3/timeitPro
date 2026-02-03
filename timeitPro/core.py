@@ -40,6 +40,8 @@ def timeit(
     Returns:
         Callable: Wrapped function returning the last run's result.
     """
+    if runs < 1:
+        raise ValueError("runs must be >= 1")
 
     def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
         @wraps(func)
@@ -56,7 +58,7 @@ def timeit(
                 # Start metrics
                 start_time: float = time.perf_counter()
                 start_mem: int = process.memory_info().rss
-                start_cpu: float = process.cpu_percent(interval=None)
+                start_cpu_times = process.cpu_times()
 
                 # Execute original function
                 result = func(*args, **kwargs)
@@ -64,7 +66,13 @@ def timeit(
                 # End metrics
                 end_time: float = time.perf_counter()
                 end_mem: int = process.memory_info().rss
-                end_cpu: float = process.cpu_percent(interval=None)
+                end_cpu_times = process.cpu_times()
+                wall_time = end_time - start_time
+                cpu_time_delta = (
+                        (end_cpu_times.user + end_cpu_times.system)
+                        - (start_cpu_times.user + start_cpu_times.system)
+                )
+                cpu_usage_percent = (cpu_time_delta / wall_time * 100) if wall_time > 0 else 0.0
                 tracemem: tuple[int, int] = tracemalloc.get_traced_memory()
                 peak_mem: int = tracemem[1]
                 tracemalloc.stop()
@@ -74,8 +82,8 @@ def timeit(
                     "function": func.__name__,
                     "run": run_idx,
                     "execution_time_sec": round(end_time - start_time, 6),
-                    "cpu_usage_percent": round(end_cpu, 2),
-                    "memory_usage_bytes": end_mem - start_mem,
+                    "cpu_usage_percent": round(cpu_usage_percent, 2),
+                    "memory_usage_bytes": max(0, end_mem - start_mem),
                     "peak_memory_bytes": peak_mem,
                 }
 
